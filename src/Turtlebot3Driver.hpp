@@ -3,7 +3,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
 
 class Turtlebot3Driver : public rclcpp::Node {
 public:
@@ -15,7 +15,7 @@ public:
 
 private:
     static constexpr double FORWARD_SPEED = 0.2;
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr commandPub;
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr commandPub;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laserSub;
     bool isObstacleDetected;
 
@@ -23,4 +23,3 @@ private:
 };
 
 #endif  // TURTLEBOT3_DRIVER_HPP_
-

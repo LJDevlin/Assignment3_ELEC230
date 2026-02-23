@@ -1,29 +1,40 @@
-# elec230_launch.py
-from launch import LaunchDescription
-from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+import os
 from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, ExecuteProcess
+from launch.event_handlers import OnShutdown
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node
 
 def generate_launch_description():
-    # Define the path to the TurtleBot3 simulation launch file
-    turtlebot3_gazebo_launch_file_dir = '/opt/ros/foxy/share/turtlebot3_gazebo'
-    turtlebot3_simulation_launch_file = turtlebot3_gazebo_launch_file_dir + '/launch/turtlebot3_world.launch.py'
+    pkg_turtlebot3_gazebo = get_package_share_directory('turtlebot3_gazebo')
+
+    gz_sim = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_turtlebot3_gazebo, 'launch', 'turtlebot3_world.launch.py')
+        ),
+        launch_arguments={'gz_args': '-r'}.items(),
+    )
+
+    driver_node = Node(
+        package='assignment3',
+        executable='turtlebot3_driver',
+        name='turtlebot3_driver',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
 
     return LaunchDescription([
-        # Include the launch file that launches TurtleBot3 simulation
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(turtlebot3_simulation_launch_file),
-            launch_arguments={'TURTLEBOT3_MODEL': 'burger'}.items(),
-        ),
-
-        # Launch your executable
-        Node(
-            package='assignment3',
-            executable='turtlebot3_driver',
-            name='turtlebot3_driver',
-            output='screen',
+        gz_sim,
+        driver_node,
+        RegisterEventHandler(
+            OnShutdown(
+                on_shutdown=[
+                    ExecuteProcess(
+                        cmd=['killall', '-9', 'ruby'],
+                        output='screen'
+                    )
+                ]
+            )
         ),
     ])
-
-
